@@ -33,6 +33,10 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
+      - name: Install
+        run: make install
+
       - name: Lint
         if: matrix.latest
         run: make lint

@@ -1,0 +1,44 @@
+export GOBIN ?= $(shell pwd)/bin
+
+GO_FILES := $(shell \
+	find . '(' -path '*/.*' -o -path './vendor' ')' -prune \
+	-o -name '*.go' -print | cut -b3-)
+
+REVIVE = $(GOBIN)/revive
+STATICCHECK = $(GOBIN)/staticcheck
+
+.PHONY: build
+build:
+	go build ./...
+
+.PHONY: install
+install:
+	go mod download
+
+.PHONY: test
+test:
+	go test -race ./...
+
+.PHONY: cover
+cover:
+	go test -coverprofile=cover.out -covermode=atomic -coverpkg=./... ./...
+	go tool cover -html=cover.out -o cover.html
+
+$(REVIVE): tools/go.mod
+	cd tools && go install github.com/mgechev/revive
+
+$(STATICCHECK): tools/go.mod
+	cd tools && go install honnef.co/go/tools/cmd/staticcheck@2023.1.2
+
+.PHONY: lint
+lint: $(REVIVE) $(STATICCHECK)
+	@rm -rf lint.log
+	@echo "Checking gofmt"
+	@gofmt -d -s $(GO_FILES) 2>&1 | tee lint.log
+	@echo "Checking go vet"
+	@go vet ./... 2>&1 | tee -a lint.log
+	@echo "Checking revive"
+	@$(REVIVE) ./... | tee -a lint.log
+	@echo "Checking staticcheck"
+	@$(STATICCHECK) ./... 2>&1 |  tee -a lint.log
+	@[ ! -s lint.log ]

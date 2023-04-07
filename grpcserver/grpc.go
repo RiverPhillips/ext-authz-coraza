@@ -1,5 +1,5 @@
-// grpc_server contains the gRPC server and its dependencies.
-package grpc_server
+// Package grpcserver contains the gRPC server and its dependencies.
+package grpcserver
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-type GrpcServerParams struct {
+type grpcServerParams struct {
 	fx.In
 
 	LC       fx.Lifecycle
@@ -22,7 +22,8 @@ type GrpcServerParams struct {
 	Log      *zap.Logger
 }
 
-func NewGrpcServer(p GrpcServerParams) *grpc.Server {
+// NewGrpcServer returns a new gRPC server.
+func NewGrpcServer(p grpcServerParams) *grpc.Server {
 	srv := grpc.NewServer(
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
@@ -49,7 +50,11 @@ func NewGrpcServer(p GrpcServerParams) *grpc.Server {
 					return err
 				}
 				p.Log.Info("Starting gRPC server", zap.String("port", port))
-				go srv.Serve(ln)
+				go func() {
+					if err := srv.Serve(ln); err != nil {
+						p.Log.Error("Failed to serve gRPC server", zap.Error(err))
+					}
+				}()
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {

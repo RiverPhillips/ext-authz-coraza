@@ -7,7 +7,7 @@ GO_FILES := $(shell \
 GOLANGCI = $(GOBIN)/golangci-lint
 
 .PHONY: build
-build:
+build: install
 	go build ./...
 
 .PHONY: install
@@ -23,11 +23,11 @@ cover:
 	go test -coverprofile=cover.out -covermode=atomic -coverpkg=./... ./...
 	go tool cover -html=cover.out -o cover.html
 
-$(GOLANGCI): tools/go.mod
-	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+$(GOLANGCI): tools/go.sum
+	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
 .PHONY: lint
-lint: $(REVIVE) $(STATICCHECK)
+lint: $(GOLANGCI)
 	@rm -rf lint.log
 	@echo "Checking gofmt"
 	@gofmt -d -s $(GO_FILES) 2>&1 | tee lint.log

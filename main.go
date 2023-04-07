@@ -2,7 +2,7 @@
 package main
 
 import (
-	"github.com/RiverPhillips/ext-authz-coraza/grpc_server"
+	"github.com/RiverPhillips/ext-authz-coraza/grpcserver"
 	"github.com/RiverPhillips/ext-authz-coraza/healthcheck"
 	_ "go.uber.org/automaxprocs"
 	"go.uber.org/fx"
@@ -14,8 +14,8 @@ import (
 func main() {
 	fx.New(
 		fx.Provide(
-			grpc_server.NewGrpcServer,
-			grpc_server.AsService(healthcheck.NewHealthcheckService),
+			grpcserver.NewGrpcServer,
+			grpcserver.AsService(healthcheck.NewHealthcheckService),
 			zap.NewProduction,
 		),
 		fx.Invoke(func(srv *grpc.Server) {}),

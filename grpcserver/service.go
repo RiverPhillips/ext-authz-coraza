@@ -1,4 +1,4 @@
-package grpc_server
+package grpcserver
 
 import (
 	"go.uber.org/fx"
@@ -8,6 +8,7 @@ import (
 // This ensures that service implements Service
 var _ Service = (*service)(nil)
 
+// Service is a gRPC service. Containing a Server and the ServiceDescription.
 type Service interface {
 	Desc() *grpc.ServiceDesc
 	Server() interface{}
@@ -28,6 +29,7 @@ func (s *service) Server() interface{} {
 	return s.server
 }
 
+// NewService returns a new Service.
 func NewService(desc *grpc.ServiceDesc, server interface{}) Service {
 	return &service{
 		desc:   desc,
@@ -35,6 +37,7 @@ func NewService(desc *grpc.ServiceDesc, server interface{}) Service {
 	}
 }
 
+// AsService is a helper function to annotate a function as a gRPC service.
 func AsService(f any) any {
 	return fx.Annotate(f, fx.As(new(Service)), fx.ResultTags(`group:"grpc_service"`))
 }

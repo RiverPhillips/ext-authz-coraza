@@ -8,15 +8,21 @@ import (
 // This ensures that service implements Service
 var _ Service = (*service)(nil)
 
-// Service is a gRPC service. Containing a Server and the ServiceDescription.
+// Service is a gRPC service that can be registered with a gRPC server.
+//
+//go:generate mockery --name Service --quiet --output .
 type Service interface {
-	Desc() *grpc.ServiceDesc
-	Server() interface{}
+	Register(*grpc.Server)
 }
 
 type service struct {
 	desc   *grpc.ServiceDesc
 	server interface{}
+}
+
+// Register implements Service
+func (s *service) Register(srv *grpc.Server) {
+	srv.RegisterService(s.desc, s.server)
 }
 
 // Desc implements Service

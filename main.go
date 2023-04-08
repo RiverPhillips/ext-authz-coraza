@@ -16,8 +16,8 @@ func main() {
 	fx.New(
 		fx.Provide(
 			grpcserver.NewGrpcServer,
-			grpcserver.AsService(healthcheck.NewHealthcheckService),
-			envoy.NewExtauthzServer,
+			healthcheck.NewHealthcheckService,
+			envoy.NewExtAuthzService(),
 			zap.NewProduction,
 		),
 		fx.Invoke(func(srv *grpc.Server) {}),

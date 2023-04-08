@@ -5,7 +5,6 @@ import (
 	"context"
 	"net"
 
-	ext_authz_v3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -15,17 +14,17 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-type grpcServerParams struct {
+// NewGrpcServerParams is injected into NewGrpcServer by fx.
+type NewGrpcServerParams struct {
 	fx.In
 
 	LC       fx.Lifecycle
 	Services []Service `group:"grpc_service"`
 	Log      *zap.Logger
-	ExtAuthz ext_authz_v3.AuthorizationServer
 }
 
 // NewGrpcServer returns a new gRPC server.
-func NewGrpcServer(p grpcServerParams) *grpc.Server {
+func NewGrpcServer(p NewGrpcServerParams) *grpc.Server {
 	srv := grpc.NewServer(
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
@@ -38,12 +37,10 @@ func NewGrpcServer(p grpcServerParams) *grpc.Server {
 	)
 
 	for _, service := range p.Services {
-		srv.RegisterService(service.Desc(), service.Server())
+		service.Register(srv)
 	}
 
 	reflection.Register(srv)
-
-	ext_authz_v3.RegisterAuthorizationServer(srv, p.ExtAuthz)
 
 	p.LC.Append(
 		fx.Hook{

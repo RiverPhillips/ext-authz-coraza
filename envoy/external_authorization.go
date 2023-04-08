@@ -15,3 +15,8 @@ func (*extAuthzServer) Check(context.Context, *ext_authz_v3.CheckRequest) (*ext_
 }
 
 var _ ext_authz_v3.AuthorizationServer = (*extAuthzServer)(nil)
+
+// NewExtauthzServer returns a new extAuthzServer.
+func NewExtauthzServer() ext_authz_v3.AuthorizationServer {
+	return &extAuthzServer{}
+}
